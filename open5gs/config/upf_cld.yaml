@@ -1,0 +1,24 @@
+db_uri: mongodb://mongo/open5gs
+
+logger:
+  file:
+    path: /open5gs/install/var/log/open5gs/upf_cld.log
+#  level: info   # fatal|error|warn|info(default)|debug|trace
+
+upf:
+  pfcp:
+    server:
+      - address: 192.168.0.112
+  gtpu:
+    server:
+      - address: 192.168.0.112
+  session:
+    - subnet: 10.45.0.0/16
+      gateway: 10.45.0.1
+      dnn: internet
+      dev: ogstun
+  metrics:
+    server:
+      - address: 192.168.0.112
+        port: 9090
+

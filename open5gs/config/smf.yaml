@@ -1,0 +1,44 @@
+db_uri: mongodb://mongo/open5gs
+
+logger:
+  file:
+    path: /open5gs/install/var/log/open5gs/smf.log
+#  level: info   # fatal|error|warn|info(default)|debug|trace
+
+smf:
+  sbi:
+    server:
+      - address: 192.168.0.211
+        port: 7777
+    client:
+      nrf:
+        - uri: http://192.168.0.210:7777
+  pfcp:
+    server:
+      - address: 192.168.0.211
+    client:
+      upf:
+        - address: 192.168.0.112
+          dnn: internet
+        - address: 192.168.0.113
+          dnn: mec
+  gtpc:
+    server:
+      - address: 192.168.0.211
+  gtpu:
+    server:
+      - address: 192.168.0.211
+  session:
+    - subnet: 10.45.0.0/16
+      gateway: 10.45.0.1
+      dnn: internet
+    - subnet: 10.46.0.0/16
+      gateway: 10.46.0.1
+      dnn: mec
+  dns:
+    - 8.8.8.8
+    - 8.8.4.4
+    - 2001:4860:4860::8888
+    - 2001:4860:4860::8844
+  mtu: 1400
+  freeDiameter: /open5gs/install/etc/freeDiameter/smf.conf
