@@ -4,7 +4,7 @@ This project explores a **modular architecture** of the 5G Core (5GC) by running
 
 ## 🔗 Related Project
 
-This project is an extension of the [5G Network Virtualization with ComNetsEmu](https://github.com/YOUR_USERNAME/comnetsemu-5gs) repository, where the objective here is to **modularize each network function** into separate containers for enhanced isolation and management.
+This project is an extension of the [5G Network Virtualization with ComNetsEmu](https://github.com/jacobbista/comnetsemu_5gs) repository, where the objective here is to **modularize each network function** into separate containers for enhanced isolation and management.
 
 ## 📦 Software Versions
 
@@ -227,14 +227,6 @@ docker exec <container> ping <target-ip>
 - **Database Tuning**: Optimize MongoDB for your use case
 - **Load Balancing**: Implement for high-traffic scenarios
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -244,13 +236,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Open5GS](https://github.com/open5gs/open5gs) team for the excellent 5G Core implementation
 - [UERANSIM](https://github.com/aligungr/UERANSIM) team for the 5G UE/gNodeB simulator
 - [ComNetsEmu](https://github.com/stevelorenz/comnetsemu) for the network emulation framework
-
-## 📞 Support
-
-For issues and questions:
-- Open an issue in this repository
-- Check the troubleshooting section above
-- Review the related project documentation
 
 ---
 
