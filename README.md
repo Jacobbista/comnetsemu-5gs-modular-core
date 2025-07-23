@@ -57,7 +57,7 @@ Each Network Function runs in its own dedicated container:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/comnetsemu-5gs-modular-core
+   git clone https://github.com/Jacobbista/comnetsemu-5gs-modular-core
    cd comnetsemu-5gs-modular-core
    ```
 

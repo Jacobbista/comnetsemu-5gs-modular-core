@@ -422,7 +422,7 @@ if __name__ == "__main__":
     net.addLink(gnb1, s1, bw=1000, delay="1ms", intfName1="gnb1-s1", intfName2="s1-gnb1")
     net.addLink(gnb2, s1, bw=1000, delay="1ms", intfName1="gnb2-s1", intfName2="s1-gnb2")
     
-    net.addLink(mec_server, s3, bw=1000, delay="5ms", intfName1="mec_server-s2", intfName2="s2-mec_server")
+    net.addLink(mec_server, s2, bw=1000, delay="5ms", intfName1="mec_server-s2", intfName2="s2-mec_server")
     
     print("\n*** Open5GS: Starting subscription procedure")
     o5gs   = Open5GS( "172.17.0.2" ,"27017")
