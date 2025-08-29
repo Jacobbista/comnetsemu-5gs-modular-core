@@ -13,6 +13,111 @@ This project is an extension of the [5G Network Virtualization with ComNetsEmu](
 - **[ComNetsEmu](https://github.com/stevelorenz/comnetsemu)**: v0.3.1
 - **Docker**: v26.1.3
 
+## 🚀 Quick Start
+
+### Option 1: Use Pre-built Images (Recommended)
+
+The fastest way to get started is using pre-built Docker images from Docker Hub:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Jacobbista/comnetsemu-5gs-modular-core
+   cd comnetsemu-5gs-modular-core
+   ```
+
+2. **Pull pre-built images**
+   ```bash
+   cd build
+   ./dockerhub_pull.sh
+   ```
+
+3. **Install Python modules**
+   ```bash
+   ./pyModules.sh
+   ```
+
+4. **Start the 5G network**
+   ```bash
+   cd ..
+   ./runTopology.sh
+   ```
+
+### Option 2: Build Images Locally
+
+If you prefer to build images locally or need custom modifications:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Jacobbista/comnetsemu-5gs-modular-core
+   cd comnetsemu-5gs-modular-core
+   ```
+
+2. **Build Docker images**
+   ```bash
+   cd build
+   ./build.sh
+   ```
+
+3. **Install Python modules**
+   ```bash
+   ./pyModules.sh
+   ```
+
+4. **Build MEC Server**
+   ```bash
+   cd ../mec_server
+   docker build -t mec_server .
+   ```
+
+5. **Start the 5G network**
+   ```bash
+   cd ..
+   ./runTopology.sh
+   ```
+
+## 🐳 Docker Hub Scripts
+
+### Docker Hub Pull Script (`dockerhub_pull.sh`)
+
+**Purpose**: Pulls pre-built Docker images from Docker Hub (recommended for most users)
+
+**Usage**:
+```bash
+cd build
+./dockerhub_pull.sh
+```
+
+**What it does**:
+- Pulls `jacobbista/comnetsemu-5gc:latest`
+- Pulls `jacobbista/comnetsemu-ueransim:latest`
+- Pulls `jacobbista/comnetsemu-mec:latest`
+- Tags them locally as `my5gc_v2-7-5`, `myueransim_v3-2-7`, and `mec_server`
+
+**Benefits**:
+- ✅ **Fast**: No compilation time
+- ✅ **Reliable**: Pre-tested images
+- ✅ **Consistent**: Same images for everyone
+- ✅ **Space-efficient**: No build dependencies
+
+### Docker Hub Push Script (`push_to_dockerhub.sh`)
+
+**Purpose**: Tags and pushes locally built images to Docker Hub (for contributors)
+
+**Usage**:
+```bash
+cd build
+./push_to_dockerhub.sh your_username
+```
+
+**What it does**:
+- Tags local images with your Docker Hub username
+- Pushes them to `your_username/comnetsemu-*` repositories
+- Creates both version-specific and `latest` tags
+
+**When to use**:
+- 🔧 You've modified the source code
+- 🔧 You want to share custom builds
+- 🔧 You're contributing to the project
 
 ## 🏗️ Architecture Overview
 
@@ -49,40 +154,6 @@ Each Network Function runs in its own dedicated container:
 
 - **MEC Server**: `mec_server` - `192.168.0.135` - Integrated with UPF-MEC for low-latency applications  
   > _Note: This is a simple dummy Python server provided for demonstration purposes._
-
-
-## 🚀 Quick Start
-
-### Installation Steps
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Jacobbista/comnetsemu-5gs-modular-core
-   cd comnetsemu-5gs-modular-core
-   ```
-
-2. **Build Docker images**
-   ```bash
-   cd build
-   ./build.sh
-   ```
-
-3. **Install Python modules**
-   ```bash
-   ./pyModule.sh
-   ```
-
-4. **Build MEC Server**
-   ```bash
-   cd ../mec_server
-   # Follow MEC server build instructions
-   docker build -t mec-server .
-   ```
-
-5. **Clean up Docker images (optional)**
-   ```bash
-   docker image prune
-   ```
 
 ## 📋 Usage
 
@@ -239,4 +310,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Note**: Remember to run `docker image prune` to clean up disk space after building images to safe space :).
+**Note**: Remember to run `docker image prune` to clean up disk space after building images to save space :).
