@@ -2,20 +2,105 @@
 # -*- coding: utf-8 -*-
 
 import os
+import subprocess
+import time
 
 from comnetsemu.cli import CLI
 from comnetsemu.net import Containernet
 from mininet.link import TCLink
 from mininet.log import info, setLogLevel
-from mininet.node import Controller
+from mininet.node import Controller, Intf
 from python_modules.Open5GS import Open5GS
 import json
+
+def create_multus_bridges():
+    """Create Linux bridges and veth pairs for Multus integration"""
+    
+    info("*** Creating Multus bridges for K8s pod integration\n")
+    
+    # Bridge names for different network segments
+    bridges = {
+        'n2-br': '10.202.0.1/24',    # N2: gNB <-> AMF
+        'n3-br': '10.203.0.1/24',    # N3: gNB/UE <-> UPF  
+        'n6-mec-br': '10.206.0.1/24', # N6 edge: UPF <-> MEC/DN
+        'n6-cld-br': '10.207.0.1/24'  # N6 cloud: UPF <-> DN
+    }
+    
+    # Create bridges
+    for bridge_name, ip_addr in bridges.items():
+        try:
+            # Create bridge
+            subprocess.run(['ip', 'link', 'add', bridge_name, 'type', 'bridge'], check=False)
+            subprocess.run(['ip', 'link', 'set', bridge_name, 'up'], check=False)
+            
+            # Configure IP and MTU
+            subprocess.run(['ip', 'addr', 'add', ip_addr, 'dev', bridge_name], check=False)
+            subprocess.run(['ip', 'link', 'set', bridge_name, 'mtu', '1450'], check=False)
+            
+            info(f"*** Created bridge {bridge_name} with IP {ip_addr}\n")
+        except Exception as e:
+            info(f"*** Bridge {bridge_name} already exists or error: {e}\n")
+    
+    # Create veth pairs to connect bridges to Mininet switches
+    veth_pairs = {
+        'veth_n2': ('n2-br', 's1'),
+        'veth_n3': ('n3-br', 's1'), 
+        'veth_n6m': ('n6-mec-br', 's2'),
+        'veth_n6c': ('n6-cld-br', 's3')
+    }
+    
+    for veth_name, (bridge, switch) in veth_pairs.items():
+        try:
+            # Create veth pair
+            host_veth = f"{veth_name}_host"
+            mn_veth = f"{veth_name}_mn"
+            
+            subprocess.run(['ip', 'link', 'add', host_veth, 'type', 'veth', 'peer', 'name', mn_veth], check=False)
+            
+            # Configure host side
+            subprocess.run(['ip', 'link', 'set', host_veth, 'master', bridge], check=False)
+            subprocess.run(['ip', 'link', 'set', host_veth, 'up'], check=False)
+            
+            # Configure Mininet side
+            subprocess.run(['ip', 'link', 'set', mn_veth, 'up'], check=False)
+            
+            info(f"*** Created veth pair {veth_name}: {host_veth} -> {mn_veth}\n")
+        except Exception as e:
+            info(f"*** Veth pair {veth_name} already exists or error: {e}\n")
+
+def cleanup_multus_bridges():
+    """Cleanup bridges and veth pairs"""
+    try:
+        # Remove veth pairs
+        veth_names = ['veth_n2_host', 'veth_n2_mn', 'veth_n3_host', 'veth_n3_mn',
+                     'veth_n6m_host', 'veth_n6m_mn', 'veth_n6c_host', 'veth_n6c_mn']
+        
+        for veth in veth_names:
+            subprocess.run(['ip', 'link', 'delete', veth], check=False)
+        
+        # Remove bridges
+        bridges = ['n2-br', 'n3-br', 'n6-mec-br', 'n6-cld-br']
+        for bridge in bridges:
+            subprocess.run(['ip', 'link', 'delete', bridge], check=False)
+            
+        info("*** Cleaned up Multus bridges and veth pairs\n")
+    except Exception as e:
+        info(f"*** Cleanup error: {e}\n")
 
 if __name__ == "__main__":
 
     AUTOTEST_MODE = os.environ.get("COMNETSEMU_AUTOTEST_MODE", 0)
 
     setLogLevel("info")
+
+    # Cleanup any existing Multus bridges/veth
+    cleanup_multus_bridges()
+    
+    # Create Multus bridges and veth pairs for K8s integration
+    create_multus_bridges()
+    
+    # Wait a moment for interfaces to be ready
+    time.sleep(2)
 
     # Ottieni il percorso del file di script Python corrente
     script_path = os.path.abspath(__file__)
@@ -423,6 +508,20 @@ if __name__ == "__main__":
     net.addLink(gnb2, s1, bw=1000, delay="1ms", intfName1="gnb2-s1", intfName2="s1-gnb2")
     
     net.addLink(mec_server, s2, bw=1000, delay="5ms", intfName1="mec_server-s2", intfName2="s2-mec_server")
+
+    info("*** Attaching Multus veth interfaces to switches for K8s pod integration\n")
+    
+    # Attach veth interfaces to switches
+    # These will be used by Multus to connect pods to the Mininet topology
+    try:
+        Intf('veth_n2_mn', node=s1)      # N2: gNB <-> AMF (pod su n2-br)
+        Intf('veth_n3_mn', node=s1)      # N3: gNB/UE <-> UPF (pod su n3-br)
+        Intf('veth_n6m_mn', node=s2)     # N6 "edge": UPF <-> MEC/DN (pod su n6-mec-br)
+        Intf('veth_n6c_mn', node=s3)     # N6 "cloud": UPF <-> DN (pod su n6-cld-br)
+        
+        info("*** Successfully attached Multus veth interfaces to switches\n")
+    except Exception as e:
+        info(f"*** Error attaching veth interfaces: {e}\n")
     
     print("\n*** Open5GS: Starting subscription procedure")
     o5gs   = Open5GS( "172.17.0.2" ,"27017")
@@ -445,7 +544,19 @@ if __name__ == "__main__":
     info("\n*** Starting network\n")
     net.start()
 
+    info("\n*** 5G Core topology with Multus integration ready!\n")
+    info("*** Bridges available for K8s pods:\n")
+    info("***   n2-br (10.202.0.1/24) - N2 interface\n")
+    info("***   n3-br (10.203.0.1/24) - N3 interface\n")
+    info("***   n6-mec-br (10.206.0.1/24) - N6 edge interface\n")
+    info("***   n6-cld-br (10.207.0.1/24) - N6 cloud interface\n")
+    info("*** Use 'python3 TestNet5G.py' to test the 5G network\n")
+
     if not AUTOTEST_MODE:
         # spawnXtermDocker("open5gs")
         CLI(net)
+    
     net.stop()
+    
+    # Cleanup Multus bridges on exit
+    cleanup_multus_bridges()
